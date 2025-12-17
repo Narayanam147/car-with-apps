@@ -1,0 +1,9 @@
+socketio-client==0.5.11
+python-socketio[client]==5.10.0
+# For GPIO on Raspberry Pi (uncomment if running on actual hardware)
+# RPi.GPIO==0.7.1
+# pigpio==1.78
+
+# For flight controller communication (uncomment as needed)
+# pymavlink==2.4.41
+# dronekit==2.9.2

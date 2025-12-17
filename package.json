@@ -1,0 +1,29 @@
+{
+  "name": "drone-control-system",
+  "version": "1.0.0",
+  "description": "Complete real-time drone control system with web/mobile interface",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "cd backend && npm install && cd ../frontend && npm install && cd ../drone-client && pip install -r requirements.txt",
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev",
+    "start:drone": "cd drone-client && python drone_client.py --simulator",
+    "build:frontend": "cd frontend && npm run build",
+    "test": "echo \"Tests not yet implemented\""
+  },
+  "keywords": [
+    "drone",
+    "control",
+    "websocket",
+    "iot",
+    "raspberry-pi",
+    "react",
+    "socketio"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
