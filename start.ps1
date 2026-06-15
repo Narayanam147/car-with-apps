@@ -15,10 +15,10 @@ Start-Sleep -Seconds 2
 Write-Host "`n========================================" -ForegroundColor Yellow
 Write-Host "✓ Drone Control System Started!" -ForegroundColor Green
 Write-Host "========================================" -ForegroundColor Yellow
-Write-Host "`nBackend:  http://localhost:3001" -ForegroundColor Cyan
-Write-Host "Frontend: http://localhost:3000" -ForegroundColor Cyan
+Write-Host "`nBackend:  http://localhost:3003" -ForegroundColor Cyan
+Write-Host "Frontend: http://localhost:3004" -ForegroundColor Cyan
 Write-Host "`nNext Steps:" -ForegroundColor White
-Write-Host "1. Open http://localhost:3000 in your browser"
+Write-Host "1. Open http://localhost:3004 in your browser"
 Write-Host "2. Run the drone client:"
 Write-Host "   cd drone-client"
 Write-Host "   python drone_client.py --simulator"
@@ -26,4 +26,4 @@ Write-Host "`nPress any key to open the web app..."
 $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
 # Open browser
-Start-Process "http://localhost:3000"
+Start-Process "http://localhost:3004"

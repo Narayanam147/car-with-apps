@@ -261,34 +261,59 @@
   font-size: 0.9rem;
 }
 
-/* Emergency Stop */
-.emergency-stop {
+/* Emergency Stop Floating Banner */
+.emergency-banner-container {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 350px;
+  display: flex;
+  justify-content: center;
+}
+
+.emergency-stop-floating {
   width: 100%;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
   color: white;
-  font-size: 1.3rem;
-  font-weight: 700;
-  border-radius: 12px;
-  transition: all 0.2s;
+  font-size: 1.1rem;
+  font-weight: 800;
+  border-radius: 50px;
+  box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
   text-transform: uppercase;
   letter-spacing: 1px;
-  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
-.emergency-stop:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  transform: scale(1.02);
-  box-shadow: 0 6px 12px rgba(220, 38, 38, 0.6);
+.emergency-stop-floating:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 30px rgba(239, 68, 68, 0.6);
 }
 
-.emergency-stop:active:not(:disabled) {
-  transform: scale(0.98);
+.emergency-stop-floating:active {
+  transform: scale(0.95);
 }
 
-.emergency-stop:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+/* Pulse animation */
+@keyframes emergency-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.emergency-stop-floating.pulse {
+  animation: emergency-pulse 2s infinite;
 }
 
 /* Instructions */

@@ -4,7 +4,7 @@ import { Joystick } from 'react-joystick-component';
 import './App.css';
 
 // Backend server URL - change this to your server IP
-const SERVER_URL = 'http://localhost:3001';
+const SERVER_URL = 'http://localhost:3003';
 
 function App() {
   const [socket, setSocket] = useState(null);
@@ -18,6 +18,19 @@ function App() {
   
   const joystickRef = useRef({ throttle: 0, yaw: 0, pitch: 0, roll: 0 });
   const commandIntervalRef = useRef(null);
+  const prevLeftJoystickRef = useRef({ throttle: 0, yaw: 0 });
+  const prevRightJoystickRef = useRef({ pitch: 0, roll: 0 });
+
+  // Trigger tactile vibration (haptic feedback) on supported devices
+  const triggerHaptic = (pattern) => {
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (err) {
+        console.warn('Haptic feedback failed:', err);
+      }
+    }
+  };
 
   // Initialize socket connection
   useEffect(() => {
@@ -115,11 +128,23 @@ function App() {
   const handleLeftJoystick = (stick) => {
     if (stick.type === 'move') {
       const limitedSpeed = speedLimit / 100;
-      joystickRef.current.throttle = Math.round(stick.y * 100 * limitedSpeed);
-      joystickRef.current.yaw = Math.round(stick.x * 100 * limitedSpeed);
+      const nextThrottle = Math.round(stick.y * 100 * limitedSpeed);
+      const nextYaw = Math.round(stick.x * 100 * limitedSpeed);
+      
+      // Haptic pulse when crossing zero centers
+      if (Math.sign(prevLeftJoystickRef.current.throttle) !== Math.sign(nextThrottle) ||
+          Math.sign(prevLeftJoystickRef.current.yaw) !== Math.sign(nextYaw)) {
+        triggerHaptic(10);
+      }
+      
+      joystickRef.current.throttle = nextThrottle;
+      joystickRef.current.yaw = nextYaw;
+      prevLeftJoystickRef.current = { throttle: nextThrottle, yaw: nextYaw };
     } else if (stick.type === 'stop') {
       joystickRef.current.throttle = 0;
       joystickRef.current.yaw = 0;
+      prevLeftJoystickRef.current = { throttle: 0, yaw: 0 };
+      triggerHaptic(15);
     }
   };
 
@@ -127,11 +152,23 @@ function App() {
   const handleRightJoystick = (stick) => {
     if (stick.type === 'move') {
       const limitedSpeed = speedLimit / 100;
-      joystickRef.current.pitch = Math.round(stick.y * 100 * limitedSpeed);
-      joystickRef.current.roll = Math.round(stick.x * 100 * limitedSpeed);
+      const nextPitch = Math.round(stick.y * 100 * limitedSpeed);
+      const nextRoll = Math.round(stick.x * 100 * limitedSpeed);
+      
+      // Haptic pulse when crossing zero centers
+      if (Math.sign(prevRightJoystickRef.current.pitch) !== Math.sign(nextPitch) ||
+          Math.sign(prevRightJoystickRef.current.roll) !== Math.sign(nextRoll)) {
+        triggerHaptic(10);
+      }
+      
+      joystickRef.current.pitch = nextPitch;
+      joystickRef.current.roll = nextRoll;
+      prevRightJoystickRef.current = { pitch: nextPitch, roll: nextRoll };
     } else if (stick.type === 'stop') {
       joystickRef.current.pitch = 0;
       joystickRef.current.roll = 0;
+      prevRightJoystickRef.current = { pitch: 0, roll: 0 };
+      triggerHaptic(15);
     }
   };
 
@@ -140,6 +177,7 @@ function App() {
     if (selectedDrone && socket) {
       joystickRef.current = { throttle: 0, yaw: 0, pitch: 0, roll: 0 };
       socket.emit('emergency-stop', { droneId: selectedDrone.id });
+      triggerHaptic([100, 50, 100]); // Strong dual-pulse warning haptic
       alert('EMERGENCY STOP ACTIVATED!');
     }
   };
@@ -158,6 +196,18 @@ function App() {
           </button>
         </div>
       </header>
+
+      {/* Floating Emergency Stop Banner */}
+      {selectedDrone && (
+        <div className="emergency-banner-container">
+          <button
+            className="emergency-stop-floating pulse"
+            onClick={handleEmergencyStop}
+          >
+            🛑 EMERGENCY STOP
+          </button>
+        </div>
+      )}
 
       {/* Settings Panel */}
       {showSettings && (
@@ -262,15 +312,6 @@ function App() {
             </div>
           </div>
         </div>
-
-        {/* Emergency Stop */}
-        <button
-          className="emergency-stop"
-          onClick={handleEmergencyStop}
-          disabled={!selectedDrone}
-        >
-          🛑 EMERGENCY STOP
-        </button>
       </div>
 
       {/* Instructions */}

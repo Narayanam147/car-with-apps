@@ -110,6 +110,8 @@ io.on('connection', (socket) => {
     // Forward to specific drone
     const drone = connectedClients.drones.get(droneId);
     if (drone) {
+      drone.lastControlCommandTime = Date.now();
+      drone.lastControllerId = socket.id;
       drone.socket.emit('command', {
         controllerId: socket.id,
         command,
@@ -160,6 +162,25 @@ io.on('connection', (socket) => {
     if (connectedClients.controllers.has(socket.id)) {
       connectedClients.controllers.delete(socket.id);
       console.log(`Controller disconnected: ${socket.id}`);
+      
+      // Safe hover fail-safe: immediately hover any drones controlled by this controller
+      connectedClients.drones.forEach((drone, id) => {
+        if (drone.lastControllerId === socket.id) {
+          console.log(`[FAIL-SAFE] Controller disconnected. Setting Drone ${drone.name} (${id}) to safe hover.`);
+          drone.socket.emit('command', {
+            controllerId: 'server-failsafe',
+            command: {
+              type: 'move',
+              throttle: 0,
+              yaw: 0,
+              pitch: 0,
+              roll: 0
+            },
+            timestamp: Date.now()
+          });
+          drone.lastControlCommandTime = null; // Clear command timer
+        }
+      });
     }
     
     if (connectedClients.drones.has(socket.id)) {
@@ -185,8 +206,36 @@ setInterval(() => {
   });
 }, 5000);
 
+// Controller command fail-safe monitoring (check every 50ms)
+setInterval(() => {
+  const now = Date.now();
+  const timeout = 150; // 150 milliseconds
+  
+  connectedClients.drones.forEach((drone, id) => {
+    if (drone.lastControlCommandTime && (now - drone.lastControlCommandTime > timeout)) {
+      console.log(`[FAIL-SAFE] Timeout from controller for Drone ${drone.name} (${id}). Setting to safe hover.`);
+      
+      // Emit hover command
+      drone.socket.emit('command', {
+        controllerId: drone.lastControllerId || 'server-failsafe',
+        command: {
+          type: 'move',
+          throttle: 0,
+          yaw: 0,
+          pitch: 0,
+          roll: 0
+        },
+        timestamp: now
+      });
+      
+      // Clear tracking time to prevent spamming warnings
+      drone.lastControlCommandTime = null;
+    }
+  });
+}, 50);
+
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3003;
 server.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════════╗

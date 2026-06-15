@@ -12,6 +12,12 @@ import signal
 import argparse
 from datetime import datetime
 
+# Configure console encoding for Windows/Unicode support
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 # Try to import GPIO (will fail if not on Raspberry Pi)
 try:
     import RPi.GPIO as GPIO
@@ -24,7 +30,7 @@ except ImportError:
 sio = socketio.Client(reconnection=True, reconnection_delay=1)
 
 # Configuration
-SERVER_URL = 'http://localhost:3001'
+SERVER_URL = 'http://localhost:3003'
 DRONE_NAME = 'Drone-Alpha'
 SIMULATOR_MODE = not GPIO_AVAILABLE
 
@@ -167,6 +173,8 @@ def send_telemetry():
 @sio.on('connect')
 def on_connect():
     """Handle connection to server."""
+    global emergency_stopped
+    emergency_stopped = False
     print(f"✓ Connected to server at {SERVER_URL}")
     
     # Identify as drone
@@ -259,13 +267,13 @@ def signal_handler(sig, frame):
 
 def main():
     """Main entry point."""
+    global SERVER_URL, DRONE_NAME, SIMULATOR_MODE
     parser = argparse.ArgumentParser(description='Drone Control Client')
     parser.add_argument('--server', default=SERVER_URL, help='Server URL')
     parser.add_argument('--name', default=DRONE_NAME, help='Drone name')
     parser.add_argument('--simulator', action='store_true', help='Force simulator mode')
     args = parser.parse_args()
     
-    global SERVER_URL, DRONE_NAME, SIMULATOR_MODE
     SERVER_URL = args.server
     DRONE_NAME = args.name
     
